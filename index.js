@@ -7,7 +7,7 @@ const app = express()
 app.use(express.static('public'));
 app.use(cors());
 app.use(express.json());
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 app.use(express.urlencoded({ extended: true }));
 
 const connectionString = process.env.DATABASE_URL;
