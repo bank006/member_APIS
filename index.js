@@ -91,7 +91,7 @@ app.post('/users/api/v1/create_user', async (req, res) => {
     }
 })
 
-app.post('/v1/check_user', async (req, res) => {
+app.post('/users/api/v1/check_user', async (req, res) => {
     try {
         const { phonenum } = req.body
         const result = await conn.query('SELECT * FROM users WHERE phonenum = $1 ', [phonenum])
@@ -107,17 +107,171 @@ app.post('/v1/check_user', async (req, res) => {
     }
 })
 
-app.post('/v1/get_userpoint' ,async(req ,res)=>{
-    try{
-        const {uuid }= req.body
-        const result = await conn.query('SELECT * FROM users INNER JOIN point ON users.uuid = point.uuid_user WHERE point.uuid_user = $1',[uuid])
+app.post('/users/api/v1/get_userpoint', async (req, res) => {
+    try {
+        const { uuid } = req.body
+        const result = await conn.query('SELECT * FROM users INNER JOIN point ON users.uuid = point.uuid_user WHERE point.uuid_user = $1', [uuid])
         res.json(result.rows)
-    }catch(error){
+    } catch (error) {
         console.error('find userpoint feild:', error.message);
         res.status(400).json({ error: 'find userpoint feild:' });
     }
 })
 //endusers
+
+//exchange
+app.get('/exchange/api/v1/get_exchange', async (req, res) => {
+    try {
+        const result = await conn.query('SELECT * FROM exchangerate')
+        res.json(
+            result.rows
+        )
+    } catch (error) {
+        console.error('find exchage error:', error.message);
+        res.status(400).json({ error: 'Error find exchange' });
+    }
+})
+
+app.post('/exchange/api/v1/create_exchange', async (req, res) => {
+    try {
+        const { exchange_rate } = req.body
+        const uuid_exchange = uuidv4()
+        const checklist = await conn.query("SELECT * FROM exchangerate")
+        if (checklist.rows.length > 0) {
+            const updateQuery = 'UPDATE exchangerate SET price = $1, rate = $2 ';
+            const values = [exchange_rate.price, exchange_rate.rate];
+            const updateExchange = await conn.query(updateQuery, values);
+            res.json(updateExchange)
+        } else {
+            const result = await conn.query('INSERT INTO exchangerate (uuid , price , rate) VALUES ($1 , $2 , $3)', [uuid_exchange, exchange_rate.price, exchange_rate.rate])
+            res.json(
+                result
+            )
+        }
+
+
+    } catch (error) {
+        console.error('create exchange feild:', error.message);
+        res.status(400).json({ error: 'create exchange feild' });
+    }
+})
+//end exchanhe
+
+//point
+app.get('/point/api/v1/get_point', async (req, res) => {
+    try {
+        const result = await conn.query('SELECT * FROM point')
+        res.json(
+            result
+        )
+    } catch (error) {
+        console.error('find exchage error:', error.message);
+        res.status(400).json({ error: 'Error find exchange' });
+    }
+})
+
+app.post('/point/api/v1/create_point', async (req, res) => {
+
+    try {
+        const { data } = req.body
+        const point = data.point
+        const uuid_user = data.uuid_user
+        const uuid_point = uuidv4()
+
+        const checklist = await conn.query('SELECT * FROM point WHERE uuid_user = $1', [uuid_user])
+        if (checklist.rows.length > 0) {
+            const result = await conn.query('SELECT point FROM point WHERE uuid_user = $1', [uuid_user]);
+            const currentPoint = result.rows[0].point;
+            const updatedPoint = parseInt(currentPoint) + parseInt(point)
+            const updatepoint = await conn.query('UPDATE point SET point = $1 WHERE uuid_user = $2', [updatedPoint, uuid_user]);
+            res.json(updatepoint)
+        } else {
+            const result = await conn.query('INSERT INTO point (uuid , uuid_user , point) VALUES ($1, $2 , $3)', [uuid_point, uuid_user, point])
+            res.json(
+                result
+            )
+        }
+    } catch (error) {
+        console.error('create point feild:', error.message);
+        res.status(400).json({ error: 'create point feild' });
+    }
+})
+
+//use point
+app.post('/point/api/v1/use_point', async (req, res) => {
+
+    try {
+        const { data } = req.body
+        const uuid_user = data.uuid_user
+        const point = data.point
+        const getpoint = await conn.query('SELECT point FROM point WHERE uuid_user = $1', [uuid_user]);
+        const currentPoint = getpoint.rows[0].point;
+        const updatedPoint = parseInt(currentPoint) - parseInt(point)
+        const result = await conn.query('UPDATE point SET point = $1 WHERE uuid_user = $2', [updatedPoint, uuid_user])
+        res.json(result)
+    } catch (error) {
+        console.error('use point feild:', error.message);
+        res.status(400).json({ error: 'use point feild' });
+    }
+})
+
+//end point
+
+//promotion
+app.get('/promotion/api/v1/get_promotions', async (req, res) => {
+    try {
+        const result = await conn.query('SELECT * FROM promotions')
+        res.json(
+            result
+        )
+    } catch (error) {
+        console.error('find promotions error:', error.message);
+        res.status(400).json({ error: 'Error find promotions' });
+    }
+})
+
+// create promotions
+
+app.post('/promotion/api/v1/create_promotion', async (req, res) => {
+    try {
+        const { data } = req.body
+        const uuid_promotion = uuidv4()
+        const result = await conn.query('INSERT INTO promotions (uuid , uuid_admin , title , point) VALUES ($1 , $2 , $3 ,$4)', [uuid_promotion, data.uuid_admin, data.title, data.point])
+        res.json("create success")
+    } catch (error) {
+        console.error('create promotion feild', error.message);
+        res.status(400).json({ error: 'create promotion feild' });
+    }
+})
+
+
+//edit
+
+app.post('/promotion/api/v1/edite_promotion', async (req, res) => {
+    try {
+        const { data } = req.body
+        const checklist = 'UPDATE promotions SET title = $1 , point = $2 WHERE uuid = $3'
+        const values = [data.title, data.point, data.uuid]
+        const result = await conn.query(checklist, values)
+        res.json(result)
+    } catch (error) {
+        console.error('update promotion feild', error.message);
+        res.status(400).json({ error: 'update promotion feild' });
+    }
+})
+
+//delete
+app.delete('/promotion/api/v1/delete_promotions', async (req, res) => {
+    try {
+        const { uuid_promotion } = req.body
+        const result = await conn.query('DELETE FROM promotions WHERE uuid = $1', [uuid_promotion])
+        res.json(result)
+    } catch (error) {
+        console.error('delete promotion feild', error.message);
+        res.status(400).json({ error: 'delete promotion feild' });
+    }
+})
+//end promotion
 
 const port = process.env.PORT || 3003;
 const server = app.listen(port, () => {
