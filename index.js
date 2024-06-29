@@ -54,6 +54,28 @@ app.post('/post_admin', async (req, res) => {
         res.status(400).json({ error: 'Create admin faild' })
     }
 })
+
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const result = await conn.query('SELECT * FROM admin WHERE username = $1', [username]);
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        const user = result.rows[0];
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
+        res.status(200).json({status:'success',  message: 'Login successful', user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 //endadmin
 
 //users
