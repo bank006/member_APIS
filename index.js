@@ -237,6 +237,24 @@ app.post('/point/api/v1/use_point', async (req, res) => {
     }
 })
 
+app.post('/point/api/v1/update_point', async (req, res) => {
+
+    try {
+        const { data } = req.body
+        const uuid_user = data.uuid_user
+        const point = data.point
+        const getpoint = await conn.query('SELECT point FROM point WHERE uuid_user = $1', [uuid_user]);
+        const currentPoint = getpoint.rows[0].point;
+        const updatedPoint = parseInt(currentPoint) - parseInt(point)
+        const result = await conn.query('UPDATE point SET point = $1 WHERE uuid_user = $2', [point, uuid_user])
+        res.json(result)
+    } catch (error) {
+        console.error('use point feild:', error.message);
+        res.status(400).json({ error: 'use point feild' });
+    }
+})
+
+
 //end point
 
 //promotion
@@ -244,7 +262,7 @@ app.get('/promotion/api/v1/get_promotions', async (req, res) => {
     try {
         const result = await conn.query('SELECT * FROM promotions')
         res.json(
-            result
+            result.rows
         )
     } catch (error) {
         console.error('find promotions error:', error.message);
