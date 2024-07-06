@@ -3,6 +3,7 @@ const { Pool } = require('pg')
 require('dotenv').config();
 const cors = require('cors')
 const { v4: uuidv4 } = require('uuid')
+const axios = require('axios');
 const app = express()
 app.use(express.static('public'));
 app.use(cors());
@@ -70,7 +71,7 @@ app.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        res.status(200).json({ status: 'success', message: 'Login successful', user });
+        res.status(200).json({status:'success',  message: 'Login successful', user });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -322,18 +323,19 @@ const headers = {
     'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN
 }
 const flexMessage = {
-    "messages": [
+    messages: [
         {
-            "type": "text",
-            "text": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatibus saepe quos praesentium aliquam qui rerum earum! Vitae hic quae ut, deserunt, eius quasi accusantium, in blanditiis similique officiis iste amet?"
+            type: 'text',
+            text: 'สวัสดีครับ นี่คือข้อความทดสอบจาก ChatGPT'
         }
     ]
-
 };
 
-router.post('/promotion/api/v1/sendline', async (req, res) => {
+app.post('/promotion/api/v1/sendline', async (req, res) => {
+    const {messages} = req.body
+    console.log(messages)
     try {
-        const result = await axios.post(BROADCAST_API_URL, { messages: [flexMessage] }, { headers });
+        const result = await axios.post(BROADCAST_API_URL, { messages }, { headers });
         res.json(result.data);
     } catch (error) {
         console.error('send promotion to line feild', error.message);
