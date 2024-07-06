@@ -70,7 +70,7 @@ app.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
 
-        res.status(200).json({status:'success',  message: 'Login successful', user });
+        res.status(200).json({ status: 'success', message: 'Login successful', user });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -312,6 +312,35 @@ app.delete('/promotion/api/v1/delete_promotions', async (req, res) => {
     }
 })
 //end promotion
+
+
+
+const CHANNEL_ACCESS_TOKEN = '7ceIuW+fHooH4m7ps1ANjRCaIX0Bz6jd6I4m3m4+1C0Q5+jcsTYp0PgmajHYkb0ep0I0gYzgwLH1y01OBP6jeZrm3Sn8dtCxUNMa9nGQr0YrwSPFIC2qsGzIsw9A6e7Y85wsw7JUczMbRTjEm+4j+wdB04t89/1O/w1cDnyilFU=';  // เปลี่ยนเป็น Channel Access Token ของคุณ
+const BROADCAST_API_URL = 'https://api.line.me/v2/bot/message/broadcast';
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN
+}
+const flexMessage = {
+    "messages": [
+        {
+            "type": "text",
+            "text": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatibus saepe quos praesentium aliquam qui rerum earum! Vitae hic quae ut, deserunt, eius quasi accusantium, in blanditiis similique officiis iste amet?"
+        }
+    ]
+
+};
+
+router.post('/v1/sendline', async (req, res) => {
+    try {
+        const result = await axios.post(BROADCAST_API_URL, { messages: [flexMessage] }, { headers });
+        res.json(result.data);
+    } catch (error) {
+        console.error('send promotion to line feild', error.message);
+        res.status(400).json({ error: 'send promotion to line feild' });
+    }
+})
+
 
 const port = process.env.PORT || 3003;
 const server = app.listen(port, () => {
