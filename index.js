@@ -331,7 +331,7 @@ const flexMessage = {
 
 };
 
-router.post('/v1/sendline', async (req, res) => {
+router.post('/promotion/api/v1/sendline', async (req, res) => {
     try {
         const result = await axios.post(BROADCAST_API_URL, { messages: [flexMessage] }, { headers });
         res.json(result.data);
